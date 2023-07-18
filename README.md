@@ -1,25 +1,15 @@
-# Docker Image for testing REST API
+# Deploy your Flask REST API on Docker 
 
 TASK: Design a RESTful API with Python and Flask in order to test API Gateway, Reverse Proxy or Load balancer on Layer7.
 
-Deploy this Flask REST API on Docker/Kubernetes and test endpoints.
-
-Flask is a lightweight framework for building web applications.
-
-A REST API is an interface that accepts connections via the internet, executes some business logic, and then returns a result. Fundamentally, that means that an API has input, business logic, and output. 
-
-Methods: GET, POST, DELETE, PUT.
-
-This image can be used to test your API Gateway, Reverse Proxy or Layer 7 Application Load balancers.
-
-## Docker start
+## Docker Image
 
 ``` 
 docker buildx build --platform linux/amd64 -t pijer10/rest-api-testing:latest .
 docker run -d -p 5000:5000 pijer10/rest-api-testing
 ```
 
-## REST API call examples:
+## Flask API
 
 ```
 @app.route('/', methods=['GET'])
@@ -31,42 +21,23 @@ docker run -d -p 5000:5000 pijer10/rest-api-testing
 ```
 
 
-## Kubernetes Deployment
+## Dockerfile
 
 ```
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rest-api-deployment
-  namespace: playground
-  labels:
-    app: rest-api
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: rest-api
-  template:
-    metadata:
-      labels:
-        app: rest-api
-    spec:
-      containers:
-        - name: rest-api-container
-          image: pijer10/rest-api-testing:2.0
-          ports:
-            - containerPort: 5000
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: rest-api-service
-spec:
-  selector:
-    app: rest-api
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
-  type: ClusterIP
+FROM alpine:latest
+
+RUN apk update
+RUN apk add py-pip
+RUN apk add --no-cache python3-dev 
+RUN pip install --upgrade pip
+
+COPY requirements.txt /tmp/requirements.txt
+RUN pip --no-cache-dir install -r /tmp/requirements.txt
+
+WORKDIR /app
+COPY . /app
+
+EXPOSE 5000
+
+CMD ["python3", "app.py"]
 ```
